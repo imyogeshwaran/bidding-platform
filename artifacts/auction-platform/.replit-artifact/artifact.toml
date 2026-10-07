@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Auction House"
+description = "A full-stack auction marketplace with buyer and seller tools, real-time bidding, role-based access, and live software metrics for academic demonstration."
+version = "1.0.0"
+id = "artifacts/auction-platform"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24755
+
+[services.development]
+run = "pnpm --filter @workspace/auction-platform run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/auction-platform", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/auction-platform/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24755"
+BASE_PATH = "/"

@@ -3,20 +3,27 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Online auction marketplace and software metrics demonstration API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: auth
+  - name: auctions
+  - name: bids
+  - name: watchlist
+  - name: notifications
+  - name: transactions
+  - name: dashboards
+  - name: metrics
+  - name: users
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +31,901 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Create a buyer or seller account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegistrationInput"
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "400":
+          description: Invalid registration data
+        "409":
+          description: Email already registered
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Sign in and receive a bearer token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "401":
+          description: Invalid credentials
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Get the signed-in user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResult"
+        "401":
+          description: Authentication required
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: End the client session
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Session ended
+
+  /auctions:
+    get:
+      operationId: getAuctions
+      tags: [auctions]
+      summary: Search, filter, sort, and paginate auctions
+      parameters:
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: category
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [UPCOMING, LIVE, ENDING_SOON, COMPLETED, CANCELLED, ALL]
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [endingSoon, newest, mostBids, highestPrice, lowestPrice]
+            default: endingSoon
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: pageSize
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 12 }
+      responses:
+        "200":
+          description: Matching auctions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuctionListResult"
+    post:
+      operationId: createAuction
+      tags: [auctions]
+      summary: Create an auction as a seller
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuctionInput"
+      responses:
+        "201":
+          description: Auction created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuctionResult"
+        "400":
+          description: Invalid auction details
+        "401":
+          description: Authentication required
+        "403":
+          description: Seller role required
+  /auctions/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: getAuction
+      tags: [auctions]
+      summary: Get auction details and live bidding state
+      responses:
+        "200":
+          description: Auction details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuctionResult"
+        "404":
+          description: Auction not found
+    put:
+      operationId: updateAuction
+      tags: [auctions]
+      summary: Update an auction owned by the signed-in seller
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuctionUpdate"
+      responses:
+        "200":
+          description: Auction updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuctionResult"
+        "401":
+          description: Authentication required
+        "403":
+          description: Ownership required
+        "404":
+          description: Auction not found
+    delete:
+      operationId: deleteAuction
+      tags: [auctions]
+      summary: Cancel an auction owned by the signed-in seller
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Auction cancelled
+        "401":
+          description: Authentication required
+        "403":
+          description: Ownership required
+        "404":
+          description: Auction not found
+  /auctions/{auctionId}/bids:
+    parameters:
+      - name: auctionId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: getAuctionBids
+      tags: [bids]
+      summary: Get chronological bid history
+      responses:
+        "200":
+          description: Bid history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BidListResult"
+        "404":
+          description: Auction not found
+    post:
+      operationId: placeBid
+      tags: [bids]
+      summary: Place a bid on an active auction
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BidInput"
+      responses:
+        "201":
+          description: Bid accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BidResult"
+        "400":
+          description: Bid does not satisfy auction rules
+        "401":
+          description: Authentication required
+        "404":
+          description: Auction not found
+  /users/me/bids:
+    get:
+      operationId: getMyBids
+      tags: [bids]
+      summary: Get the signed-in user's bid activity
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User bid history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MyBidsResult"
+        "401":
+          description: Authentication required
+
+  /watchlist:
+    get:
+      operationId: getWatchlist
+      tags: [watchlist]
+      summary: Get the signed-in user's watchlist
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Watched auctions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuctionListResult"
+        "401":
+          description: Authentication required
+  /watchlist/{auctionId}:
+    parameters:
+      - name: auctionId
+        in: path
+        required: true
+        schema: { type: string }
+    post:
+      operationId: addToWatchlist
+      tags: [watchlist]
+      summary: Add an auction to the watchlist
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Auction added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WatchlistResult"
+        "401":
+          description: Authentication required
+        "404":
+          description: Auction not found
+    delete:
+      operationId: removeFromWatchlist
+      tags: [watchlist]
+      summary: Remove an auction from the watchlist
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Auction removed
+        "401":
+          description: Authentication required
+
+  /notifications:
+    get:
+      operationId: getNotifications
+      tags: [notifications]
+      summary: Get recent notifications for the signed-in user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationListResult"
+        "401":
+          description: Authentication required
+  /notifications/{id}/read:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    put:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark one notification as read
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Updated notification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationResult"
+        "404":
+          description: Notification not found
+  /notifications/read-all:
+    put:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all notifications as read
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Number of notifications updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CountResult"
+  /transactions:
+    get:
+      operationId: getTransactions
+      tags: [transactions]
+      summary: Get transactions visible to the signed-in user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Transactions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionListResult"
+        "401":
+          description: Authentication required
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboards]
+      summary: Get role-aware marketplace dashboard summary
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Dashboard counts and recent platform activity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummaryResult"
+        "401":
+          description: Authentication required
+  /metrics/overview:
+    get:
+      operationId: getMetricsOverview
+      tags: [metrics]
+      summary: Get activity-derived software and auction metrics
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Core metrics and historical chart values
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetricsOverviewResult"
+        "403":
+          description: Admin role required
+  /metrics/performance:
+    get:
+      operationId: getPerformanceMetrics
+      tags: [metrics]
+      summary: Get request latency, throughput, and error measurements
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Performance measurements collected by the API
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PerformanceResult"
+        "403":
+          description: Admin role required
+  /metrics/bidding-engagement:
+    get:
+      operationId: getBiddingEngagement
+      tags: [metrics]
+      summary: Get Bidding Engagement Score and its normalized components
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: BES and auction comparisons
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EngagementResult"
+        "403":
+          description: Admin role required
+  /metrics/auction-fairness:
+    get:
+      operationId: getAuctionFairness
+      tags: [metrics]
+      summary: Get Auction Fairness Score and its compliance components
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: AFS and auction comparisons
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FairnessResult"
+        "403":
+          description: Admin role required
+  /users:
+    get:
+      operationId: getUsers
+      tags: [users]
+      summary: List platform users for administration
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserListResult"
+        "403":
+          description: Admin role required
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     HealthStatus:
       type: object
       properties:
+        status: { type: string }
+      required: [status]
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string, format: email }
+        role: { type: string, enum: [BUYER, SELLER, ADMIN] }
+        createdAt: { type: string, format: date-time }
+        lastActiveAt: { type: ["string", "null"], format: date-time }
+      required: [id, name, email, role, createdAt]
+    RegistrationInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 2, maxLength: 80 }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8, maxLength: 128 }
+        role: { type: string, enum: [BUYER, SELLER] }
+      required: [name, email, password, role]
+    LoginInput:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8, maxLength: 128 }
+      required: [email, password]
+    AuthResult:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:
+          type: object
+          properties:
+            token: { type: string }
+            user: { $ref: "#/components/schemas/User" }
+          required: [token, user]
+        message: { type: string }
+      required: [success, data, message]
+    UserResult:
+      type: object
+      properties:
+        success: { type: boolean }
+        data: { $ref: "#/components/schemas/User" }
+        message: { type: string }
+      required: [success, data, message]
+    UserListResult:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/User" }
+        message: { type: string }
+      required: [success, data, message]
+    Auction:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        category: { type: string }
+        imageUrl: { type: string }
+        sellerId: { type: string }
+        sellerName: { type: string }
+        startingPrice: { type: number }
+        currentPrice: { type: number }
+        increment: { type: number }
+        bidCount: { type: integer }
+        uniqueBidders: { type: integer }
+        startAt: { type: string, format: date-time }
+        endAt: { type: string, format: date-time }
         status:
           type: string
+          enum: [UPCOMING, LIVE, ENDING_SOON, COMPLETED, CANCELLED]
+        winnerId: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
       required:
+        - id
+        - title
+        - description
+        - category
+        - imageUrl
+        - sellerId
+        - sellerName
+        - startingPrice
+        - currentPrice
+        - increment
+        - bidCount
+        - uniqueBidders
+        - startAt
+        - endAt
         - status
-
+        - createdAt
+    AuctionInput:
+      type: object
+      properties:
+        title: { type: string, minLength: 3, maxLength: 100 }
+        description: { type: string, minLength: 20, maxLength: 3000 }
+        category: { type: string, minLength: 2, maxLength: 60 }
+        imageUrl: { type: string, minLength: 1, maxLength: 1000 }
+        startingPrice: { type: number, exclusiveMinimum: 0 }
+        increment: { type: number, exclusiveMinimum: 0 }
+        startAt: { type: string, format: date-time }
+        endAt: { type: string, format: date-time }
+      required: [title, description, category, imageUrl, startingPrice, increment, startAt, endAt]
+    AuctionUpdate:
+      type: object
+      properties:
+        title: { type: string, minLength: 3, maxLength: 100 }
+        description: { type: string, minLength: 20, maxLength: 3000 }
+        category: { type: string, minLength: 2, maxLength: 60 }
+        imageUrl: { type: string, minLength: 1, maxLength: 1000 }
+        startingPrice: { type: number, exclusiveMinimum: 0 }
+        increment: { type: number, exclusiveMinimum: 0 }
+        startAt: { type: string, format: date-time }
+        endAt: { type: string, format: date-time }
+    AuctionResult:
+      type: object
+      properties:
+        success: { type: boolean }
+        data: { $ref: "#/components/schemas/Auction" }
+        message: { type: string }
+      required: [success, data, message]
+    AuctionListResult:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/Auction" }
+        total: { type: integer }
+        page: { type: integer }
+        pageSize: { type: integer }
+        message: { type: string }
+      required: [success, data, total, page, pageSize, message]
+    Bid:
+      type: object
+      properties:
+        id: { type: string }
+        auctionId: { type: string }
+        bidderId: { type: string }
+        bidderName: { type: string }
+        amount: { type: number }
+        status: { type: string, enum: [ACCEPTED, REJECTED] }
+        placedAt: { type: string, format: date-time }
+        sequence: { type: integer }
+        processingMs: { type: number }
+      required: [id, auctionId, bidderId, bidderName, amount, status, placedAt, sequence, processingMs]
+    BidInput:
+      type: object
+      properties:
+        amount: { type: number, exclusiveMinimum: 0 }
+      required: [amount]
+    BidResult:
+      type: object
+      properties:
+        success: { type: boolean }
+        data: { $ref: "#/components/schemas/Bid" }
+        message: { type: string }
+      required: [success, data, message]
+    BidListResult:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/Bid" }
+        message: { type: string }
+      required: [success, data, message]
+    MyBid:
+      type: object
+      properties:
+        bid: { $ref: "#/components/schemas/Bid" }
+        auction: { $ref: "#/components/schemas/Auction" }
+        leading: { type: boolean }
+      required: [bid, auction, leading]
+    MyBidsResult:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/MyBid" }
+        message: { type: string }
+      required: [success, data, message]
+    WatchlistResult:
+      type: object
+      properties:
+        success: { type: boolean }
+        data: { type: boolean }
+        message: { type: string }
+      required: [success, data, message]
+    Notification:
+      type: object
+      properties:
+        id: { type: string }
+        type:
+          type: string
+          enum: [BID_ACCEPTED, BID_REJECTED, BID_SURPASSED, AUCTION_STARTING, AUCTION_ENDING, AUCTION_ENDED, AUCTION_WON, AUCTION_LOST, TRANSACTION, SYSTEM]
+        title: { type: string }
+        message: { type: string }
+        auctionId: { type: ["string", "null"] }
+        read: { type: boolean }
+        createdAt: { type: string, format: date-time }
+      required: [id, type, title, message, read, createdAt]
+    NotificationResult:
+      type: object
+      properties:
+        success: { type: boolean }
+        data: { $ref: "#/components/schemas/Notification" }
+        message: { type: string }
+      required: [success, data, message]
+    NotificationListResult:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/Notification" }
+        unreadCount: { type: integer }
+        message: { type: string }
+      required: [success, data, unreadCount, message]
+    CountResult:
+      type: object
+      properties:
+        success: { type: boolean }
+        data: { type: integer }
+        message: { type: string }
+      required: [success, data, message]
+    Transaction:
+      type: object
+      properties:
+        id: { type: string }
+        auctionId: { type: string }
+        auctionTitle: { type: string }
+        buyerId: { type: string }
+        buyerName: { type: string }
+        sellerId: { type: string }
+        sellerName: { type: string }
+        finalPrice: { type: number }
+        status: { type: string, enum: [PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED] }
+        paymentStatus: { type: string, enum: [NOT_STARTED, PENDING, PAID, FAILED] }
+        createdAt: { type: string, format: date-time }
+      required: [id, auctionId, auctionTitle, buyerId, buyerName, sellerId, sellerName, finalPrice, status, paymentStatus, createdAt]
+    TransactionListResult:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/Transaction" }
+        message: { type: string }
+      required: [success, data, message]
+    Activity:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        detail: { type: string }
+        createdAt: { type: string, format: date-time }
+        kind: { type: string }
+      required: [id, title, detail, createdAt, kind]
+    DashboardSummary:
+      type: object
+      properties:
+        totalAuctions: { type: integer }
+        liveAuctions: { type: integer }
+        completedAuctions: { type: integer }
+        totalBids: { type: integer }
+        activeUsers: { type: integer }
+        transactions: { type: integer }
+        watchlistCount: { type: integer }
+        activeBidCount: { type: integer }
+        wonCount: { type: integer }
+        lostCount: { type: integer }
+        totalSpending: { type: number }
+        sellerRevenue: { type: number }
+        averageBidsPerAuction: { type: number }
+        recentActivity:
+          type: array
+          items: { $ref: "#/components/schemas/Activity" }
+      required: [totalAuctions, liveAuctions, completedAuctions, totalBids, activeUsers, transactions, watchlistCount, activeBidCount, wonCount, lostCount, totalSpending, sellerRevenue, averageBidsPerAuction, recentActivity]
+    DashboardSummaryResult:
+      type: object
+      properties:
+        success: { type: boolean }
+        data: { $ref: "#/components/schemas/DashboardSummary" }
+        message: { type: string }
+      required: [success, data, message]
+    MetricValue:
+      type: object
+      properties:
+        id: { type: string }
+        label: { type: string }
+        value: { type: number }
+        unit: { type: string }
+        formula: { type: string }
+        period: { type: string }
+        trendPercent: { type: number }
+        history:
+          type: array
+          items: { $ref: "#/components/schemas/TimePoint" }
+      required: [id, label, value, unit, formula, period, trendPercent, history]
+    TimePoint:
+      type: object
+      properties:
+        label: { type: string }
+        value: { type: number }
+      required: [label, value]
+    OutcomeCount:
+      type: object
+      properties:
+        label: { type: string }
+        value: { type: integer }
+      required: [label, value]
+    MetricsOverview:
+      type: object
+      properties:
+        metrics:
+          type: array
+          items: { $ref: "#/components/schemas/MetricValue" }
+        bidActivity:
+          type: array
+          items: { $ref: "#/components/schemas/TimePoint" }
+        auctionActivity:
+          type: array
+          items: { $ref: "#/components/schemas/TimePoint" }
+        bidOutcomes:
+          type: array
+          items: { $ref: "#/components/schemas/OutcomeCount" }
+        generatedAt: { type: string, format: date-time }
+      required: [metrics, bidActivity, auctionActivity, bidOutcomes, generatedAt]
+    MetricsOverviewResult:
+      type: object
+      properties:
+        success: { type: boolean }
+        data: { $ref: "#/components/schemas/MetricsOverview" }
+        message: { type: string }
+      required: [success, data, message]
+    ScoreFactor:
+      type: object
+      properties:
+        key: { type: string }
+        label: { type: string }
+        value: { type: number }
+        weight: { type: number }
+      required: [key, label, value, weight]
+    ScoreComparison:
+      type: object
+      properties:
+        auctionId: { type: string }
+        auctionTitle: { type: string }
+        score: { type: number }
+      required: [auctionId, auctionTitle, score]
+    Engagement:
+      type: object
+      properties:
+        score: { type: number }
+        formula: { type: string }
+        factors:
+          type: array
+          items: { $ref: "#/components/schemas/ScoreFactor" }
+        trend:
+          type: array
+          items: { $ref: "#/components/schemas/TimePoint" }
+        comparisons:
+          type: array
+          items: { $ref: "#/components/schemas/ScoreComparison" }
+      required: [score, formula, factors, trend, comparisons]
+    EngagementResult:
+      type: object
+      properties:
+        success: { type: boolean }
+        data: { $ref: "#/components/schemas/Engagement" }
+        message: { type: string }
+      required: [success, data, message]
+    Fairness:
+      type: object
+      properties:
+        score: { type: number }
+        formula: { type: string }
+        factors:
+          type: array
+          items: { $ref: "#/components/schemas/ScoreFactor" }
+        trend:
+          type: array
+          items: { $ref: "#/components/schemas/TimePoint" }
+        comparisons:
+          type: array
+          items: { $ref: "#/components/schemas/ScoreComparison" }
+      required: [score, formula, factors, trend, comparisons]
+    FairnessResult:
+      type: object
+      properties:
+        success: { type: boolean }
+        data: { $ref: "#/components/schemas/Fairness" }
+        message: { type: string }
+      required: [success, data, message]
+    Performance:
+      type: object
+      properties:
+        requestCount: { type: integer }
+        successfulRequests: { type: integer }
+        failedRequests: { type: integer }
+        averageResponseMs: { type: number }
+        p95ResponseMs: { type: number }
+        p99ResponseMs: { type: number }
+        throughputPerMinute: { type: number }
+        errorRatePercent: { type: number }
+        bidAverageProcessingMs: { type: number }
+        responseHistory:
+          type: array
+          items: { $ref: "#/components/schemas/TimePoint" }
+      required: [requestCount, successfulRequests, failedRequests, averageResponseMs, p95ResponseMs, p99ResponseMs, throughputPerMinute, errorRatePercent, bidAverageProcessingMs, responseHistory]
+    PerformanceResult:
+      type: object
+      properties:
+        success: { type: boolean }
+        data: { $ref: "#/components/schemas/Performance" }
+        message: { type: string }
+      required: [success, data, message]

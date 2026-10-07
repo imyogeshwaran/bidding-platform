@@ -1,0 +1,1387 @@
+# COMPLETE ONLINE AUCTION PLATFORM
+## Full-Stack Frontend + Backend Development Prompt
+
+Build a complete, professional, production-quality **Online Auction Platform** consisting of a React frontend and Node.js/Express backend.
+
+This is a **Software Metrics academic project**, so the application must not only provide auction functionality but also provide measurable software/system metrics and project-specific metrics.
+
+============================================================
+IMPORTANT SCOPE RULE
+============================================================
+
+Build:
+
+1. Complete Frontend
+2. Complete Backend
+3. REST APIs
+4. Real-time bidding using Socket.IO
+5. Authentication and role-based authorization
+6. Auction management
+7. Bid management
+8. Notifications
+9. Watchlist
+10. Transaction workflow
+11. Software Metrics Engine
+12. Bidding Engagement Score (BES)
+13. Auction Fairness Score (AFS)
+14. Performance monitoring
+15. Admin metrics dashboard
+16. Testing-ready architecture
+17. SonarQube-ready code structure
+18. JMeter-ready performance APIs
+
+DO NOT:
+
+- Create the actual database.
+- Configure MongoDB Atlas.
+- Create MongoDB collections.
+- Create database deployment.
+- Hardcode database credentials.
+- Hardcode API credentials.
+- Implement a real payment gateway.
+
+Instead, create a clean **repository/data-access abstraction layer** so a database can be connected later without changing the frontend or business logic.
+
+============================================================
+1. TECHNOLOGY STACK
+============================================================
+
+FRONTEND:
+
+- React
+- Vite
+- JavaScript/JSX
+- React Router
+- Tailwind CSS
+- Axios
+- Zustand or Context API
+- Recharts
+- Socket.IO Client
+- Lucide React
+
+BACKEND:
+
+- Node.js
+- Express.js
+- JavaScript
+- REST API
+- Socket.IO
+- JWT authentication
+- bcrypt
+- dotenv
+- request validation
+- centralized error handling
+- structured logging
+
+DEVELOPMENT:
+
+- VS Code
+- Git/GitHub
+- Postman
+
+SOFTWARE METRICS:
+
+- SonarQube-compatible code
+- Apache JMeter-compatible performance testing
+
+============================================================
+2. OVERALL ARCHITECTURE
+============================================================
+
+Implement this architecture:
+
+                    ONLINE AUCTION PLATFORM
+                              |
+             +----------------+----------------+
+             |                                 |
+             ↓                                 ↓
+        React Frontend                    Admin Dashboard
+             |                                 |
+             +---------------+-----------------+
+                             ↓
+                         REST API
+                             ↓
+                    Node.js + Express
+                             |
+            +----------------+----------------+
+            |                |                |
+            ↓                ↓                ↓
+       Auth Service    Auction Service    Metrics Service
+            |                |                |
+            +----------------+----------------+
+                             |
+                     Repository Layer
+                             |
+                     Database Adapter
+                             |
+                      [NOT IMPLEMENTED]
+
+Real-time path:
+
+React
+  ↓
+Socket.IO
+  ↓
+Node.js
+  ↓
+Auction Service
+  ↓
+Broadcast updated auction state
+
+The repository/data-access layer must remain database-independent.
+
+============================================================
+3. PROJECT STRUCTURE
+============================================================
+
+Create:
+
+online-auction-platform/
+
+├── frontend/
+│   ├── src/
+│   │   ├── assets/
+│   │   ├── components/
+│   │   │   ├── common/
+│   │   │   ├── auction/
+│   │   │   ├── bidding/
+│   │   │   ├── dashboard/
+│   │   │   ├── metrics/
+│   │   │   └── layout/
+│   │   ├── pages/
+│   │   │   ├── public/
+│   │   │   ├── auth/
+│   │   │   ├── buyer/
+│   │   │   ├── seller/
+│   │   │   └── admin/
+│   │   ├── services/
+│   │   ├── store/
+│   │   ├── hooks/
+│   │   ├── utils/
+│   │   ├── routes/
+│   │   └── App.jsx
+│   ├── .env.example
+│   └── package.json
+│
+├── backend/
+│   ├── src/
+│   │   ├── config/
+│   │   ├── controllers/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── repositories/
+│   │   ├── models/
+│   │   ├── middleware/
+│   │   ├── validators/
+│   │   ├── sockets/
+│   │   ├── metrics/
+│   │   ├── utils/
+│   │   └── server.js
+│   ├── tests/
+│   ├── .env.example
+│   ├── sonar-project.properties
+│   └── package.json
+│
+└── README.md
+
+============================================================
+4. UI/UX DESIGN
+============================================================
+
+Create a clean, modern, professional auction marketplace.
+
+The UI should look like a real commercial platform, not a basic student CRUD application.
+
+Design requirements:
+
+- Clean layout
+- Modern typography
+- Consistent spacing
+- Professional color system
+- Responsive cards
+- Rounded surfaces
+- Subtle shadows
+- Clear hierarchy
+- Minimal visual clutter
+- Accessible contrast
+- Smooth but subtle animations
+
+Do NOT overuse:
+
+- Gradients
+- Animations
+- Glassmorphism
+- Decorative elements
+
+Create reusable:
+
+- Button
+- Input
+- Select
+- SearchBar
+- Modal
+- Dialog
+- Card
+- Badge
+- Table
+- Tabs
+- Dropdown
+- Toast
+- Skeleton
+- EmptyState
+- ErrorState
+- StatCard
+- ChartCard
+- AuctionCard
+- BidHistory
+- Navbar
+- Sidebar
+- Footer
+
+============================================================
+5. USER ROLES
+============================================================
+
+Support:
+
+BUYER
+SELLER
+ADMIN
+
+Implement role-based authentication and authorization.
+
+Buyer:
+
+- Browse auctions
+- Bid
+- Watch auctions
+- View bid history
+- View won/lost auctions
+- View notifications
+- View transactions
+
+Seller:
+
+- Create auctions
+- Manage auctions
+- View bids
+- View completed auctions
+- View sales/transactions
+
+Admin:
+
+- Manage users
+- Monitor auctions
+- Monitor bids
+- Monitor transactions
+- View system metrics
+- View BES
+- View AFS
+- View performance metrics
+
+============================================================
+6. PUBLIC FRONTEND
+============================================================
+
+Create:
+
+- Home
+- Browse Auctions
+- Search
+- Categories
+- Auction Details
+- Login
+- Registration
+- Forgot Password
+- Reset Password
+- About
+- Contact
+- Terms
+- Privacy
+
+============================================================
+7. HOME PAGE
+============================================================
+
+Hero:
+
+"Bid. Compete. Win."
+
+Buttons:
+
+- Browse Auctions
+- Start Selling
+
+Sections:
+
+- Featured Auctions
+- Ending Soon
+- Recently Added
+- Popular Categories
+- How It Works
+- Platform Statistics
+- Why Choose Us
+
+Auction card:
+
+- Product image
+- Product name
+- Current bid
+- Starting price
+- Number of bids
+- Time remaining
+- Seller
+- Status
+- View Auction
+
+============================================================
+8. AUCTION BROWSING
+============================================================
+
+Implement:
+
+- Search
+- Category filter
+- Price filter
+- Status filter
+- Ending soon
+- Newly listed
+- Most bids
+- Highest price
+- Lowest price
+- Sorting
+- Pagination
+
+Statuses:
+
+- Upcoming
+- Live
+- Ending Soon
+- Completed
+- Cancelled
+
+============================================================
+9. AUCTION CREATION
+============================================================
+
+Seller can create an auction.
+
+Fields:
+
+Product:
+
+- Name
+- Description
+- Category
+- Images
+
+Auction:
+
+- Starting price
+- Minimum bid increment
+- Start date/time
+- End date/time
+
+Implement a multi-step form:
+
+Step 1 → Product information
+
+Step 2 → Auction configuration
+
+Step 3 → Review
+
+Step 4 → Publish
+
+Validate:
+
+- Required fields
+- Positive prices
+- Valid dates
+- End > Start
+- Valid increment
+
+============================================================
+10. AUCTION DETAILS
+============================================================
+
+Show:
+
+- Product gallery
+- Product information
+- Seller
+- Starting price
+- Current highest bid
+- Minimum increment
+- Bid count
+- Unique bidders
+- Start time
+- End time
+- Countdown
+- Auction status
+
+Bid panel:
+
+- Current highest bid
+- Minimum acceptable bid
+- Bid input
+- Place Bid
+
+Minimum valid bid:
+
+current highest bid + minimum bid increment
+
+============================================================
+11. REAL-TIME BIDDING
+============================================================
+
+Use Socket.IO.
+
+When a valid bid occurs:
+
+1. Backend validates it.
+2. Backend records it.
+3. Current price updates.
+4. Bid count updates.
+5. Bid history updates.
+6. Socket event is emitted.
+7. All connected auction users receive the update.
+
+No page refresh should be required.
+
+Handle:
+
+- Connect
+- Disconnect
+- Reconnect
+- Connection errors
+- Auction rooms
+
+Events:
+
+auction:bid
+auction:closed
+auction:updated
+notification:new
+
+============================================================
+12. BID MANAGEMENT
+============================================================
+
+Backend endpoint:
+
+POST /api/auctions/:auctionId/bids
+
+Flow:
+
+Authenticate user
+↓
+Check auction
+↓
+Check auction status
+↓
+Check auction time
+↓
+Get current highest bid
+↓
+Calculate minimum acceptable bid
+↓
+Validate
+↓
+Accept/reject
+↓
+Record processing metrics
+↓
+Update auction state
+↓
+Emit Socket.IO event
+
+Bid statuses:
+
+ACCEPTED
+REJECTED
+
+Rejection reasons:
+
+- Bid too low
+- Auction not active
+- Auction expired
+- Unauthorized
+- Invalid request
+
+============================================================
+13. BID HISTORY
+============================================================
+
+Show:
+
+- Bidder
+- Amount
+- Timestamp
+- Status
+- Sequence/order
+
+Maintain chronological ordering.
+
+Support real-time updates.
+
+============================================================
+14. AUCTION LIFECYCLE
+============================================================
+
+Lifecycle:
+
+UPCOMING
+    ↓
+LIVE
+    ↓
+ENDING_SOON
+    ↓
+COMPLETED
+
+When auction ends:
+
+- Disable bidding
+- Identify highest valid bid
+- Assign winner
+- Set final price
+- Update transaction
+- Notify winner
+- Notify other participants
+- Emit auction:closed
+
+Backend must be authoritative for auction closure.
+
+============================================================
+15. BUYER DASHBOARD
+============================================================
+
+Display:
+
+- Active bids
+- Auctions won
+- Auctions participated
+- Total spending
+- Watchlist
+
+Sections:
+
+- My Active Bids
+- Winning
+- Lost
+- Won
+- Bid History
+- Watchlist
+- Notifications
+
+============================================================
+16. SELLER DASHBOARD
+============================================================
+
+Display:
+
+- Active auctions
+- Completed auctions
+- Total bids
+- Total sales
+- Revenue
+- Average bids per auction
+
+Pages:
+
+- My Auctions
+- Create Auction
+- Edit Auction
+- Auction Details
+- Completed Auctions
+- Transactions
+
+============================================================
+17. ADMIN DASHBOARD
+============================================================
+
+Display:
+
+- Total Users
+- Active Users
+- Total Auctions
+- Active Auctions
+- Completed Auctions
+- Total Bids
+- Total Transactions
+- Platform Activity
+
+Charts:
+
+- Auctions over time
+- Bids over time
+- Active users
+- Bid success/rejection
+- Auction completion
+- Average bids per auction
+- Transactions
+
+============================================================
+18. NOTIFICATIONS
+============================================================
+
+Implement:
+
+- Bid accepted
+- Bid rejected
+- Bid surpassed
+- Auction starting
+- Auction ending soon
+- Auction ended
+- Auction won
+- Auction lost
+- Transaction completed
+- System notifications
+
+Support:
+
+- Read/unread
+- Mark read
+- Mark all read
+- Delete
+
+============================================================
+19. WATCHLIST
+============================================================
+
+Implement:
+
+POST /api/watchlist/:auctionId
+
+DELETE /api/watchlist/:auctionId
+
+GET /api/watchlist
+
+Frontend:
+
+- Add/remove watchlist
+- Watchlist page
+- Auction status
+- Time remaining
+- Notifications
+
+============================================================
+20. TRANSACTIONS
+============================================================
+
+Transaction states:
+
+PENDING
+PROCESSING
+COMPLETED
+FAILED
+CANCELLED
+
+Show:
+
+- Auction
+- Winner
+- Seller
+- Final price
+- Status
+- Date
+- Payment status
+
+Do NOT implement an actual payment gateway.
+
+============================================================
+21. SOFTWARE METRICS
+============================================================
+
+Create a dedicated:
+
+/admin/metrics
+
+dashboard.
+
+The following metrics MUST be implemented because they are part of the project specification:
+
+1. Bid Success Rate
+
+Successful Bids / Total Bid Attempts × 100
+
+2. Bid Rejection Rate
+
+Rejected Bids / Total Bid Attempts × 100
+
+3. Average Number of Bids per Auction
+
+Total Bids / Total Auctions
+
+4. Auction Completion Rate
+
+Completed Auctions / Total Auctions × 100
+
+5. Average Auction Participation
+
+Total Unique Bidders / Number of Auctions
+
+6. Average Bid Processing Time
+
+Milliseconds/seconds
+
+7. Average Auction Duration
+
+Minutes/hours
+
+8. User Activity Rate
+
+Active Users / Registered Users × 100
+
+9. System Response Time
+
+Milliseconds/seconds
+
+10. Transaction Completion Rate
+
+Successful Transactions / Won Auctions × 100
+
+11. User Retention Rate
+
+Returning Active Users / Previous Active Users × 100
+
+12. Price Increase Percentage
+
+((Final Price - Starting Price) / Starting Price) × 100
+
+Each metric should expose:
+
+- Current value
+- Formula
+- Raw values
+- Trend
+- Time period
+- Historical values
+
+============================================================
+22. BIDDING ENGAGEMENT SCORE
+============================================================
+
+Implement the project-specific:
+
+Bidding Engagement Score (BES)
+
+Formula:
+
+BES = 0.4U + 0.4B + 0.2T
+
+Where:
+
+U = normalized unique bidder participation
+B = normalized bid activity
+T = normalized time-based participation
+
+Score range:
+
+0–100
+
+Show:
+
+- Overall score
+- Unique bidder score
+- Bid activity score
+- Time participation score
+- BES trend
+- Auction comparison
+
+Example:
+
+BES = 72/100
+
+============================================================
+23. AUCTION FAIRNESS SCORE
+============================================================
+
+Implement:
+
+AFS = 0.35V + 0.25R + 0.20T + 0.20O
+
+Where:
+
+V = valid bid compliance
+R = rejection accuracy
+T = timing compliance
+O = bid-order consistency
+
+Score range:
+
+0–100
+
+Show:
+
+- Overall AFS
+- Valid bid compliance
+- Rejection accuracy
+- Timing compliance
+- Bid-order consistency
+- Historical trend
+- Auction comparison
+
+============================================================
+24. METRICS VISUALIZATION
+============================================================
+
+Use professional charts:
+
+- Line charts
+- Bar charts
+- Area charts
+- Donut charts
+- KPI cards
+- Progress indicators
+- Tables
+
+Create filters:
+
+7 Days
+30 Days
+90 Days
+Custom Range
+
+Visualize:
+
+- Bid Success
+- Bid Rejection
+- Bids/Auction
+- Auction Completion
+- Participation
+- Processing Time
+- Response Time
+- User Activity
+- Transactions
+- Retention
+- Price Increase
+- BES
+- AFS
+
+============================================================
+25. PERFORMANCE MONITORING
+============================================================
+
+Backend middleware must record:
+
+- Request count
+- Response time
+- Status code
+- Error count
+- Endpoint
+- Method
+- Timestamp
+
+Calculate:
+
+- Average response time
+- P95 response time
+- P99 response time
+- Throughput
+- Error rate
+- Successful requests
+- Failed requests
+
+Expose:
+
+GET /api/metrics/performance
+
+Frontend should display these values.
+
+============================================================
+26. BID PROCESSING TIMING
+============================================================
+
+For every bid capture:
+
+requestReceivedAt
+validationStartedAt
+validationCompletedAt
+operationStart
+operationEnd
+responseSentAt
+
+Calculate:
+
+Bid Processing Time
+
+System Response Time
+
+Use these measurements in the metrics dashboard.
+
+============================================================
+27. SONARQUBE INTEGRATION
+============================================================
+
+Make the project SonarQube-ready.
+
+Backend and frontend code must be:
+
+- Modular
+- Maintainable
+- Low duplication
+- Meaningfully named
+- Properly documented
+- Low complexity
+- Free from dead code
+- Free from hardcoded secrets
+
+Track/visualize:
+
+- Lines of Code
+- Bugs
+- Vulnerabilities
+- Code Smells
+- Duplications
+- Cyclomatic Complexity
+- Cognitive Complexity
+- Technical Debt
+- Maintainability
+- Reliability
+- Security
+
+Create:
+
+sonar-project.properties
+
+Do NOT implement SonarQube itself.
+
+The dashboard can consume SonarQube results through a backend integration later.
+
+============================================================
+28. SECURITY
+============================================================
+
+Implement:
+
+- JWT authentication
+- Password hashing
+- Role-based authorization
+- Input validation
+- Rate limiting
+- CORS
+- Security headers
+- Ownership checks
+- Safe errors
+- Protected routes
+- No sensitive logging
+
+Never expose:
+
+- Passwords
+- Secrets
+- Tokens
+- Database credentials
+- Stack traces
+
+Create `.env.example` files only.
+
+============================================================
+29. ERROR HANDLING
+============================================================
+
+Use centralized backend error handling.
+
+Success:
+
+{
+  "success": true,
+  "data": {},
+  "message": ""
+}
+
+Error:
+
+{
+  "success": false,
+  "error": {
+    "code": "",
+    "message": ""
+  }
+}
+
+Use correct HTTP status codes.
+
+Frontend must display friendly errors.
+
+============================================================
+30. API ENDPOINTS
+============================================================
+
+AUTH:
+
+POST /api/auth/register
+POST /api/auth/login
+POST /api/auth/logout
+GET /api/auth/me
+
+USERS:
+
+GET /api/users/me
+PUT /api/users/me
+GET /api/users/:id
+
+PRODUCTS:
+
+POST /api/products
+GET /api/products
+GET /api/products/:id
+PUT /api/products/:id
+DELETE /api/products/:id
+
+AUCTIONS:
+
+POST /api/auctions
+GET /api/auctions
+GET /api/auctions/:id
+PUT /api/auctions/:id
+DELETE /api/auctions/:id
+
+BIDS:
+
+POST /api/auctions/:auctionId/bids
+GET /api/auctions/:auctionId/bids
+GET /api/users/me/bids
+
+WATCHLIST:
+
+POST /api/watchlist/:auctionId
+DELETE /api/watchlist/:auctionId
+GET /api/watchlist
+
+NOTIFICATIONS:
+
+GET /api/notifications
+PUT /api/notifications/:id/read
+PUT /api/notifications/read-all
+DELETE /api/notifications/:id
+
+TRANSACTIONS:
+
+GET /api/transactions
+GET /api/transactions/:id
+
+METRICS:
+
+GET /api/metrics/overview
+GET /api/metrics/bids
+GET /api/metrics/auctions
+GET /api/metrics/users
+GET /api/metrics/transactions
+GET /api/metrics/performance
+GET /api/metrics/bidding-engagement
+GET /api/metrics/auction-fairness
+
+============================================================
+31. API SERVICE LAYER
+============================================================
+
+Frontend must NOT directly contain business logic.
+
+Create services:
+
+authService
+userService
+productService
+auctionService
+bidService
+notificationService
+watchlistService
+transactionService
+metricsService
+
+Backend must separate:
+
+Routes
+Controllers
+Services
+Repositories
+
+============================================================
+32. DATABASE EXCLUSION
+============================================================
+
+VERY IMPORTANT:
+
+Do NOT implement database functionality.
+
+Do NOT:
+
+- Connect MongoDB
+- Create MongoDB schemas
+- Create collections
+- Create database indexes
+- Configure MongoDB Atlas
+- Store real credentials
+
+Instead create repository interfaces such as:
+
+UserRepository
+ProductRepository
+AuctionRepository
+BidRepository
+NotificationRepository
+TransactionRepository
+
+Use mock/in-memory implementations ONLY where required to demonstrate the application flow.
+
+The architecture must allow MongoDB or another database to be connected later.
+
+============================================================
+33. TESTING
+============================================================
+
+Create backend tests for:
+
+- Registration
+- Login
+- Authorization
+- Auction creation
+- Auction validation
+- Bid validation
+- Successful bid
+- Rejected bid
+- Auction expiration
+- Winner selection
+- Transaction lifecycle
+- BES
+- AFS
+- Performance metrics
+
+Test edge cases:
+
+- Bid below minimum
+- Bid equal to minimum
+- Bid after auction closes
+- Bid before auction starts
+- Invalid dates
+- Invalid price
+- Unauthorized modification
+- Concurrent bids
+- Invalid authentication
+
+============================================================
+34. JMeter COMPATIBILITY
+============================================================
+
+Make the APIs easy to test using Apache JMeter.
+
+Important performance test endpoints:
+
+POST /api/auctions/:auctionId/bids
+
+GET /api/auctions
+
+GET /api/auctions/:id
+
+GET /api/auctions/:id/bids
+
+Create README instructions for testing:
+
+10 concurrent users
+50 concurrent users
+100 concurrent users
+
+Measure:
+
+- Average response time
+- P95
+- P99
+- Throughput
+- Error rate
+- Successful requests
+
+============================================================
+35. LOGGING
+============================================================
+
+Implement structured logging.
+
+Log:
+
+- API requests
+- Response time
+- Status
+- Bid result
+- Auction lifecycle events
+- Transaction changes
+- Errors
+
+Never log:
+
+- Passwords
+- JWT secrets
+- API keys
+- Database credentials
+
+============================================================
+36. RESPONSIVE FRONTEND
+============================================================
+
+The frontend must work on:
+
+- Desktop
+- Laptop
+- Tablet
+- Mobile
+
+Make:
+
+- Responsive navbar
+- Responsive sidebar
+- Responsive auction cards
+- Responsive tables
+- Responsive charts
+- Mobile bidding interface
+
+============================================================
+37. ACCESSIBILITY
+============================================================
+
+Implement:
+
+- Keyboard navigation
+- Accessible forms
+- Labels
+- ARIA where appropriate
+- Focus states
+- Good contrast
+- Screen-reader-friendly feedback
+
+============================================================
+38. FINAL APPLICATION FLOW
+============================================================
+
+The final user flow must work conceptually as:
+
+REGISTER
+   ↓
+LOGIN
+   ↓
+BUYER / SELLER DASHBOARD
+   ↓
+BROWSE AUCTIONS
+   ↓
+VIEW AUCTION
+   ↓
+PLACE BID
+   ↓
+BACKEND VALIDATES BID
+   ↓
+BID ACCEPTED / REJECTED
+   ↓
+METRICS RECORDED
+   ↓
+SOCKET.IO REAL-TIME UPDATE
+   ↓
+OTHER USERS SEE NEW BID
+   ↓
+AUCTION ENDS
+   ↓
+WINNER IDENTIFIED
+   ↓
+TRANSACTION CREATED
+   ↓
+NOTIFICATIONS SENT
+   ↓
+METRICS UPDATED
+   ↓
+ADMIN DASHBOARD
+   ↓
+BES + AFS + PERFORMANCE + SOFTWARE METRICS
+
+============================================================
+39. FINAL QUALITY CHECK
+============================================================
+
+Before considering the project complete:
+
+FRONTEND:
+
+- Every route works
+- Every major button works
+- Forms work
+- Validation works
+- Loading states work
+- Error states work
+- Responsive UI works
+- Authentication UI works
+- Role-based UI works
+- Auction countdown works
+- Bid interface works
+- Real-time updates work
+- Notifications work
+- Dashboard works
+- Metrics dashboard works
+- BES works
+- AFS works
+- Charts work
+
+BACKEND:
+
+- Authentication works
+- Authorization works
+- Auction APIs work
+- Bid APIs work
+- Bid validation works
+- Auction lifecycle works
+- Socket.IO works
+- Notifications work
+- Transaction workflow works
+- Metrics engine works
+- BES calculation works
+- AFS calculation works
+- Performance monitoring works
+- Error handling works
+- Logging works
+- Security middleware works
+- API responses are consistent
+
+CODE QUALITY:
+
+- No unnecessary duplication
+- No unused imports
+- No hardcoded secrets
+- No console errors
+- No major TODOs
+- Clean architecture
+- SonarQube-compatible
+- JMeter-compatible
+- Clear README
+
+============================================================
+40. MOST IMPORTANT REQUIREMENT
+============================================================
+
+The entire application must remain faithful to the **Online Auction Platform Software Metrics project specification**.
+
+Do not replace the project's metrics with unrelated analytics.
+
+The following must remain central to the system:
+
+- Bid Success Rate
+- Bid Rejection Rate
+- Average Number of Bids per Auction
+- Auction Completion Rate
+- Average Auction Participation
+- Average Bid Processing Time
+- Average Auction Duration
+- User Activity Rate
+- System Response Time
+- Transaction Completion Rate
+- User Retention Rate
+- Price Increase Percentage
+- Bidding Engagement Score (BES)
+- Auction Fairness Score (AFS)
+
+The application should collect the underlying data required to calculate these metrics automatically.
+
+The software metrics should not be merely static numbers displayed on the UI.
+
+They must be derived from the application's actual auction/bidding activity through the backend metrics engine.
+
+The frontend must visualize those calculated values clearly.
+
+The final result should be a complete, clean, professional **Online Auction Platform + Software Metrics Demonstration System**.
+
+Do not add unrelated functionality that changes the project's scope.
