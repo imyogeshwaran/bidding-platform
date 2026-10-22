@@ -1,0 +1,1 @@
+- [Database-independent demo](auction-storage-scope.md) — keep auction data in replaceable in-memory repositories; do not provision or connect a database unless the user changes this requirement.

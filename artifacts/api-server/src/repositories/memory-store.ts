@@ -171,8 +171,7 @@ const daysAgo = (days: number): string =>
 export function seedDemoAuctions(): void {
   if (auctions.length > 0) return;
 
-  const seller = users.find((user) => user.id === "demo-seller");
-  const sellerName = seller?.name ?? "Mara Bennett";
+  const sellerName = "Mara Bennett";
   const records: AuctionRecord[] = [
     {
       id: "camera-01",
@@ -181,7 +180,7 @@ export function seedDemoAuctions(): void {
         "A beautifully preserved rangefinder with a bright, clean lens and precise mechanical shutter. Recently serviced and ready for its next owner.",
       category: "Collectibles",
       imageUrl: "/images/auction-camera.jpg",
-      sellerId: "demo-seller",
+      sellerId: "sample-seller",
       sellerName,
       startingPrice: 420,
       currentPrice: 590,
@@ -201,7 +200,7 @@ export function seedDemoAuctions(): void {
         "A slim vintage dress watch with a warm gold case, original cream dial, and a fresh leather strap. A timeless piece in excellent running condition.",
       category: "Watches",
       imageUrl: "/images/auction-watch.jpg",
-      sellerId: "demo-seller",
+      sellerId: "sample-seller",
       sellerName,
       startingPrice: 310,
       currentPrice: 390,
@@ -221,7 +220,7 @@ export function seedDemoAuctions(): void {
         "Hand-thrown stoneware with a softly sculpted profile and a one-of-a-kind cobalt brush detail. Signed by the artist; no chips or repairs.",
       category: "Art",
       imageUrl: "/images/auction-vase.jpg",
-      sellerId: "demo-seller",
+      sellerId: "sample-seller",
       sellerName,
       startingPrice: 85,
       currentPrice: 125,
@@ -241,7 +240,7 @@ export function seedDemoAuctions(): void {
         "An original teak frame with carefully restored joinery and newly upholstered olive wool. Comfortable, authentic, and ready to become a room's centerpiece.",
       category: "Design",
       imageUrl: "/images/auction-chair.jpg",
-      sellerId: "demo-seller",
+      sellerId: "sample-seller",
       sellerName,
       startingPrice: 680,
       currentPrice: 810,
@@ -258,9 +257,9 @@ export function seedDemoAuctions(): void {
 
   auctions.push(...records);
 
-  const bidderOne = users.find((user) => user.id === "demo-buyer");
-  const bidderTwo = users.find((user) => user.id === "demo-buyer-two");
-  const bidderThree = users.find((user) => user.id === "demo-admin");
+  const bidderOne = { id: "sample-buyer-one", name: "Alex Morgan" };
+  const bidderTwo = { id: "sample-buyer-two", name: "Jordan Ellis" };
+  const bidderThree = { id: "sample-buyer-three", name: "Morgan Lee" };
   const bidSeeds = [
     ["camera-01", bidderOne, 465, 1, 38],
     ["camera-01", bidderTwo, 515, 2, 34],
@@ -274,10 +273,9 @@ export function seedDemoAuctions(): void {
     ["chair-01", bidderOne, 740, 1, 41],
     ["chair-01", bidderTwo, 770, 2, 36],
     ["chair-01", bidderOne, 810, 3, 30],
-  ] as const;
+  ] as Array<[string, { id: string; name: string }, number, number, number]>;
 
   for (const [auctionId, bidder, amount, sequence, processingMs] of bidSeeds) {
-    if (!bidder) continue;
     const timestamp = Date.now() - (sequence + auctionId.length) * 60 * 60 * 1000;
     bids.push({
       id: createId(),
@@ -306,9 +304,9 @@ export function seedDemoAuctions(): void {
     id: createId(),
     auctionId: "chair-01",
     auctionTitle: "Mid-Century Teak Lounge Chair",
-    buyerId: "demo-buyer",
-    buyerName: bidderOne?.name ?? "Alex Morgan",
-    sellerId: "demo-seller",
+    buyerId: bidderOne.id,
+    buyerName: bidderOne.name,
+    sellerId: "sample-seller",
     sellerName,
     finalPrice: 810,
     status: "PENDING",

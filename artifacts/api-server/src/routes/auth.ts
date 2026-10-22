@@ -25,20 +25,6 @@ function issueToken(user: UserRecord): string {
   });
 }
 
-export async function seedDevelopmentAccounts(): Promise<void> {
-  if (process.env.NODE_ENV === "production" || users.length > 0) return;
-
-  const passwordHash = await bcrypt.hash("AuctionDemo!2026", 10);
-  const createdAt = new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString();
-  const demoUsers: UserRecord[] = [
-    { id: "demo-admin", name: "Morgan Lee", email: "admin@auction.demo", role: "ADMIN", passwordHash, createdAt, lastActiveAt: new Date().toISOString() },
-    { id: "demo-buyer", name: "Alex Morgan", email: "buyer@auction.demo", role: "BUYER", passwordHash, createdAt, lastActiveAt: new Date().toISOString() },
-    { id: "demo-seller", name: "Mara Bennett", email: "seller@auction.demo", role: "SELLER", passwordHash, createdAt, lastActiveAt: new Date().toISOString() },
-    { id: "demo-buyer-two", name: "Jordan Ellis", email: "jordan@auction.demo", role: "BUYER", passwordHash, createdAt, lastActiveAt: new Date().toISOString() },
-  ];
-  users.push(...demoUsers);
-}
-
 router.post("/auth/register", async (request, response): Promise<void> => {
   const parsed = RegisterBody.safeParse(request.body);
   if (!parsed.success) {
