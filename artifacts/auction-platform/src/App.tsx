@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type MouseEvent, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, Route, Switch, Router as WouterRouter, useLocation, useParams } from 'wouter';
-import { setAuthTokenGetter, useAddToWatchlist, useCreateAuction, useExitAuction, useGetAuction, useGetAuctionBids, useGetAuctions, useGetBiddingEngagement, useGetAuctionFairness, useGetCurrentUser, useGetDashboardSummary, useGetMetricsOverview, useGetMyBids, useGetNotifications, useGetPerformanceMetrics, useGetTransactions, useGetUsers, useGetWatchlist, useLogin, useLogout, useMarkAllNotificationsRead, useMarkNotificationRead, usePlaceBid, useRegister, useRemoveFromWatchlist } from '@workspace/api-client-react';
+import { setAuthTokenGetter, setBaseUrl, useAddToWatchlist, useCreateAuction, useExitAuction, useGetAuction, useGetAuctionBids, useGetAuctions, useGetBiddingEngagement, useGetAuctionFairness, useGetCurrentUser, useGetDashboardSummary, useGetMetricsOverview, useGetMyBids, useGetNotifications, useGetPerformanceMetrics, useGetTransactions, useGetUsers, useGetWatchlist, useLogin, useLogout, useMarkAllNotificationsRead, useMarkNotificationRead, usePlaceBid, useRegister, useRemoveFromWatchlist } from '@workspace/api-client-react';
 import type { Auction, AuctionListResult, AuctionResult, BidListResult, BidResult, GetAuctionsParams, User } from '@workspace/api-client-react';
 import { Activity, ArrowDown, ArrowRight, ArrowUpRight, Bell, Check, ChevronLeft, ChevronRight, Clock3, Gavel, Heart, LineChart, LogIn, LogOut, Menu, Plus, Search, ShieldCheck, ShoppingBag, Sparkles, Trophy, Users, X } from 'lucide-react';
 import { io } from 'socket.io-client';
@@ -10,6 +10,9 @@ import './index.css';
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 12_000 } } });
 const tokenKey = 'auction-house-token';
 const savedAuctionsKey = 'auction-house-watchlist';
+const apiBaseUrl = (import.meta.env.VITE_API_URL || '').trim();
+const socketUrl = (import.meta.env.VITE_SOCKET_URL || apiBaseUrl || '').trim();
+setBaseUrl(apiBaseUrl || null);
 setAuthTokenGetter(() => localStorage.getItem(tokenKey));
 const getSavedIds = (): string[] => {
   try {
@@ -87,7 +90,7 @@ function Shell() {
   const qc = useQueryClient();
   useEffect(() => { setMenuOpen(false); }, [loc]);
   useEffect(() => {
-    const socket = io({ path: '/socket.io' });
+    const socket = io(socketUrl || undefined, { path: '/socket.io' });
     socket.on('auction:updated', (update: { auctionId?: string }) => {
       const refreshes = [
         qc.invalidateQueries({ queryKey: ['/api/auctions'] }),

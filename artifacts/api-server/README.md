@@ -26,7 +26,7 @@ $env:PORT = '3001'
 corepack pnpm --filter @workspace/api-server start
 ```
 
-The frontend's Vite proxy targets `http://localhost:3001` by default. Set `API_PROXY_TARGET` if the API runs elsewhere.
+The frontend's Vite proxy targets `http://localhost:3001` by default. Set `API_PROXY_TARGET` if the API runs elsewhere. In the frontend app, define `VITE_API_URL` and `VITE_SOCKET_URL` to point at the API origin when you are not using the dev-server proxy, for example `http://localhost:3001`.
 
 ## Account roles and administration
 
