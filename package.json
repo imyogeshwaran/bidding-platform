@@ -1,3 +1,4 @@
+
 {
   "name": "workspace",
   "version": "0.0.0",
@@ -9,16 +10,6 @@
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
   },
   "private": true,
-  
-"pnpm": {
-  "onlyBuiltDependencies": [
-    "@swc/core",
-    "esbuild",
-    "msw",
-    "unrs-resolver"
-  ]
-},
-
   "dependencies": {
     "@replit/connectors-sdk": "^0.4.3"
   },
