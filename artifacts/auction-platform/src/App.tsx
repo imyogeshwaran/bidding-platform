@@ -10,8 +10,13 @@ import './index.css';
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 12_000 } } });
 const tokenKey = 'auction-house-token';
 const savedAuctionsKey = 'auction-house-watchlist';
-const apiBaseUrl = (import.meta.env.VITE_API_URL || '').trim();
-const socketUrl = (import.meta.env.VITE_SOCKET_URL || apiBaseUrl || '').trim();
+const apiBaseUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
+const socketUrl = (import.meta.env.VITE_SOCKET_URL || apiBaseUrl || '').trim().replace(/\/+$/, '');
+const resolveApiUrl = (url: string) => {
+  if (!url.startsWith('/')) return url;
+  if (!apiBaseUrl) return url;
+  return `${apiBaseUrl}${url}`;
+};
 setBaseUrl(apiBaseUrl || null);
 setAuthTokenGetter(() => localStorage.getItem(tokenKey));
 const getSavedIds = (): string[] => {
@@ -44,7 +49,7 @@ const titleCase = (s = '') => s.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g
 async function sendAdminAction(path: string, method: 'PATCH' | 'DELETE', body?: unknown): Promise<string> {
   const token = localStorage.getItem(tokenKey);
   if (!token) throw new Error('Your admin session has expired. Sign in again.');
-  const response = await fetch(path, {
+  const response = await fetch(resolveApiUrl(path), {
     method,
     headers: {
       Authorization: `Bearer ${token}`,
@@ -566,7 +571,7 @@ type SoftwareMetricTrend = {
 async function loadSoftwareMetrics<T>(section: string, range: SoftwareMetricRange): Promise<T> {
   const token = localStorage.getItem(tokenKey);
   if (!token) throw new Error('Your admin session has expired. Sign in again.');
-  const response = await fetch(`/api/admin/metrics/${section}?range=${range}`, {
+  const response = await fetch(resolveApiUrl(`/api/admin/metrics/${section}?range=${range}`), {
     headers: { Authorization: `Bearer ${token}` },
   });
   const payload = await response.json() as { success?: boolean; data?: T; error?: { message?: string } };
