@@ -102,6 +102,11 @@ function Shell() {
         qc.invalidateQueries({ queryKey: ['/api/dashboard/summary'] }),
         qc.invalidateQueries({ queryKey: ['/api/me/bids'] }),
         qc.invalidateQueries({ queryKey: ['/api/transactions'] }),
+        qc.invalidateQueries({ queryKey: ['/api/admin/metrics/overview'] }),
+        qc.invalidateQueries({ queryKey: ['/api/admin/metrics/standard'] }),
+        qc.invalidateQueries({ queryKey: ['/api/admin/metrics/custom'] }),
+        qc.invalidateQueries({ queryKey: ['/api/admin/metrics/trends'] }),
+        qc.invalidateQueries({ queryKey: ['/api/metrics/overview'] }),
       ];
       if (update.auctionId) {
         refreshes.push(
