@@ -41,6 +41,7 @@ import type {
   NotificationResult,
   PerformanceResult,
   RegistrationInput,
+  SetUserSuspensionParams,
   TransactionListResult,
   UserListResult,
   UserResult,
@@ -825,11 +826,11 @@ export const getDeleteAuctionUrl = (id: string,) => {
 }
 
 /**
- * @summary Cancel an auction owned by the signed-in seller
+ * @summary Cancel an auction owned by the signed-in seller or moderate it as an administrator
  */
-export const deleteAuction = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+export const deleteAuction = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<AuctionResult> => {
 
-  return customFetch<void>(getDeleteAuctionUrl(id),
+  return customFetch<AuctionResult>(getDeleteAuctionUrl(id),
   {
     ...options,
     method: 'DELETE'
@@ -877,7 +878,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteAuctionMutationVariables = {id: string}
 
     /**
- * @summary Cancel an auction owned by the signed-in seller
+ * @summary Cancel an auction owned by the signed-in seller or moderate it as an administrator
  */
 export const useDeleteAuction = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAuction>>, TError,DeleteAuctionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -888,6 +889,81 @@ export const useDeleteAuction = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getDeleteAuctionMutationOptions(options));
+    }
+
+export const getExitAuctionUrl = (auctionId: string,) => {
+
+
+
+
+  return `/api/auctions/${auctionId}/exit`
+}
+
+/**
+ * Exiting is final until the user places another accepted bid. The auction closes with the last remaining bidder when at least two distinct bidders have participated.
+ * @summary Exit an auction as a non-leading bidder
+ */
+export const exitAuction = async (auctionId: string, options?: Parameters<typeof customFetch>[1]): Promise<AuctionResult> => {
+
+  return customFetch<AuctionResult>(getExitAuctionUrl(auctionId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getExitAuctionMutationKey = () => ['exitAuction'] as const;
+
+export const getExitAuctionMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof exitAuction>>, TError,ExitAuctionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof exitAuction>>, TError,ExitAuctionMutationVariables, TContext> => {
+
+const mutationKey = getExitAuctionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof exitAuction>>, ExitAuctionMutationVariables> = (props) => {
+          const {auctionId} = props ?? {};
+
+          return  exitAuction(auctionId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ExitAuctionMutationResult = NonNullable<Awaited<ReturnType<typeof exitAuction>>>
+
+    export type ExitAuctionMutationError = ErrorType<void>
+    export type ExitAuctionMutationVariables = {auctionId: string}
+
+    /**
+ * @summary Exit an auction as a non-leading bidder
+ */
+export const useExitAuction = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof exitAuction>>, TError,ExitAuctionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof exitAuction>>,
+        TError,
+        ExitAuctionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getExitAuctionMutationOptions(options));
     }
 
 export const getGetAuctionBidsUrl = (auctionId: string,) => {
@@ -2121,4 +2197,85 @@ export function useGetUsers<TData = Awaited<ReturnType<typeof getUsers>>, TError
 
 
 
+
+export const getSetUserSuspensionUrl = (params: SetUserSuspensionParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/users/suspension?${stringifiedParams}` : `/api/users/suspension`
+}
+
+/**
+ * @summary Suspend or restore a non-administrator account
+ */
+export const setUserSuspension = async (params: SetUserSuspensionParams, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getSetUserSuspensionUrl(params),
+  {
+    ...options,
+    method: 'PATCH'
+
+
+  }
+);}
+
+
+
+
+
+export const getSetUserSuspensionMutationKey = () => ['setUserSuspension'] as const;
+
+export const getSetUserSuspensionMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setUserSuspension>>, TError,SetUserSuspensionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setUserSuspension>>, TError,SetUserSuspensionMutationVariables, TContext> => {
+
+const mutationKey = getSetUserSuspensionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setUserSuspension>>, SetUserSuspensionMutationVariables> = (props) => {
+          const {params} = props ?? {};
+
+          return  setUserSuspension(params,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetUserSuspensionMutationResult = NonNullable<Awaited<ReturnType<typeof setUserSuspension>>>
+
+    export type SetUserSuspensionMutationError = ErrorType<void>
+    export type SetUserSuspensionMutationVariables = {params: SetUserSuspensionParams}
+
+    /**
+ * @summary Suspend or restore a non-administrator account
+ */
+export const useSetUserSuspension = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setUserSuspension>>, TError,SetUserSuspensionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setUserSuspension>>,
+        TError,
+        SetUserSuspensionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSetUserSuspensionMutationOptions(options));
+    }
 

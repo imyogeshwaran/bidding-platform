@@ -13,6 +13,7 @@ function publicUser(user: UserRecord) {
     name: user.name,
     email: user.email,
     role: user.role,
+    isSuspended: user.isSuspended === true,
     createdAt: user.createdAt,
     lastActiveAt: user.lastActiveAt,
   };
@@ -52,6 +53,7 @@ router.post("/auth/register", async (request, response): Promise<void> => {
     name: parsed.data.name.trim(),
     email,
     role,
+    isSuspended: false,
     passwordHash: await bcrypt.hash(parsed.data.password, 12),
     createdAt: new Date().toISOString(),
     lastActiveAt: new Date().toISOString(),
@@ -86,6 +88,13 @@ router.post("/auth/login", async (request, response): Promise<void> => {
     });
     return;
   }
+  if (user.isSuspended) {
+    response.status(403).json({
+      success: false,
+      error: { code: "ACCOUNT_SUSPENDED", message: "This account is suspended. Contact support for assistance." },
+    });
+    return;
+  }
 
   user.lastActiveAt = new Date().toISOString();
   addActivity("Signed in", `${user.name} returned to the marketplace`, "user", user.id);
@@ -110,6 +119,7 @@ router.get("/auth/me", authenticate, (_request, response): void => {
 });
 
 router.post("/auth/logout", authenticate, (_request, response): void => {
+  response.locals.skipStatePersistence = true;
   response.sendStatus(204);
 });
 

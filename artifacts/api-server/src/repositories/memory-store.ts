@@ -1,6 +1,22 @@
 import { randomUUID } from "node:crypto";
 
 export type UserRole = "BUYER" | "SELLER" | "ADMIN";
+
+export function normalizeUserRole(role: unknown): UserRole | null {
+  if (typeof role !== "string") return null;
+
+  switch (role.trim().toUpperCase()) {
+    case "BUYER":
+      return "BUYER";
+    case "SELLER":
+      return "SELLER";
+    case "ADMIN":
+      return "ADMIN";
+    default:
+      return null;
+  }
+}
+
 export type AuctionStatus =
   | "UPCOMING"
   | "LIVE"
@@ -19,6 +35,7 @@ export interface UserRecord {
   name: string;
   email: string;
   role: UserRole;
+  isSuspended?: boolean;
   passwordHash: string;
   createdAt: string;
   lastActiveAt: string | null;
@@ -41,6 +58,8 @@ export interface AuctionRecord {
   endAt: string;
   status: AuctionStatus;
   winnerId: string | null;
+  exitedBidderIds?: string[];
+  finalizedAt?: string;
   createdAt: string;
 }
 
@@ -55,6 +74,15 @@ export interface BidRecord {
   sequence: number;
   processingMs: number;
   rejectionReason: string | null;
+  validationAudit?: {
+    evaluated: true;
+    accepted: boolean;
+    rulesFailed: string[];
+    auctionStatus: AuctionStatus;
+    currentPrice: number;
+    increment: number;
+    sellerId: string;
+  };
   timing: {
     requestReceivedAt: number;
     validationStartedAt: number;
@@ -88,6 +116,7 @@ export interface TransactionRecord {
   status: TransactionStatus;
   paymentStatus: "NOT_STARTED" | "PENDING" | "PAID" | "FAILED";
   createdAt: string;
+  transactionDeadlineAt?: string;
 }
 
 export interface ActivityRecord {
@@ -100,11 +129,13 @@ export interface ActivityRecord {
 }
 
 export interface RequestSample {
+  id?: string;
   method: string;
   endpoint: string;
   statusCode: number;
   durationMs: number;
   timestamp: number;
+  userId?: string;
 }
 
 export const users: UserRecord[] = [];
@@ -162,159 +193,4 @@ export function addNotification(
 
 export function recordRequest(sample: RequestSample): void {
   requestSamples.push(sample);
-  if (requestSamples.length > 5000) requestSamples.splice(0, 1000);
 }
-
-const daysAgo = (days: number): string =>
-  new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-
-export function seedDemoAuctions(): void {
-  if (auctions.length > 0) return;
-
-  const sellerName = "Mara Bennett";
-  const records: AuctionRecord[] = [
-    {
-      id: "camera-01",
-      title: "1968 Rangefinder Film Camera",
-      description:
-        "A beautifully preserved rangefinder with a bright, clean lens and precise mechanical shutter. Recently serviced and ready for its next owner.",
-      category: "Collectibles",
-      imageUrl: "/images/auction-camera.jpg",
-      sellerId: "sample-seller",
-      sellerName,
-      startingPrice: 420,
-      currentPrice: 590,
-      increment: 25,
-      bidCount: 4,
-      uniqueBidders: 3,
-      startAt: daysAgo(1),
-      endAt: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
-      status: "LIVE",
-      winnerId: null,
-      createdAt: daysAgo(3),
-    },
-    {
-      id: "watch-01",
-      title: "Gold Dress Watch, 1970s",
-      description:
-        "A slim vintage dress watch with a warm gold case, original cream dial, and a fresh leather strap. A timeless piece in excellent running condition.",
-      category: "Watches",
-      imageUrl: "/images/auction-watch.jpg",
-      sellerId: "sample-seller",
-      sellerName,
-      startingPrice: 310,
-      currentPrice: 390,
-      increment: 20,
-      bidCount: 3,
-      uniqueBidders: 2,
-      startAt: daysAgo(2),
-      endAt: new Date(Date.now() + 52 * 60 * 1000).toISOString(),
-      status: "ENDING_SOON",
-      winnerId: null,
-      createdAt: daysAgo(4),
-    },
-    {
-      id: "vase-01",
-      title: "Studio Ceramic Vase, No. 14",
-      description:
-        "Hand-thrown stoneware with a softly sculpted profile and a one-of-a-kind cobalt brush detail. Signed by the artist; no chips or repairs.",
-      category: "Art",
-      imageUrl: "/images/auction-vase.jpg",
-      sellerId: "sample-seller",
-      sellerName,
-      startingPrice: 85,
-      currentPrice: 125,
-      increment: 10,
-      bidCount: 2,
-      uniqueBidders: 2,
-      startAt: new Date(Date.now() + 18 * 60 * 60 * 1000).toISOString(),
-      endAt: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
-      status: "UPCOMING",
-      winnerId: null,
-      createdAt: daysAgo(1),
-    },
-    {
-      id: "chair-01",
-      title: "Mid-Century Teak Lounge Chair",
-      description:
-        "An original teak frame with carefully restored joinery and newly upholstered olive wool. Comfortable, authentic, and ready to become a room's centerpiece.",
-      category: "Design",
-      imageUrl: "/images/auction-chair.jpg",
-      sellerId: "sample-seller",
-      sellerName,
-      startingPrice: 680,
-      currentPrice: 810,
-      increment: 30,
-      bidCount: 3,
-      uniqueBidders: 3,
-      startAt: daysAgo(12),
-      endAt: daysAgo(8),
-      status: "COMPLETED",
-      winnerId: "demo-buyer",
-      createdAt: daysAgo(14),
-    },
-  ];
-
-  auctions.push(...records);
-
-  const bidderOne = { id: "sample-buyer-one", name: "Alex Morgan" };
-  const bidderTwo = { id: "sample-buyer-two", name: "Jordan Ellis" };
-  const bidderThree = { id: "sample-buyer-three", name: "Morgan Lee" };
-  const bidSeeds = [
-    ["camera-01", bidderOne, 465, 1, 38],
-    ["camera-01", bidderTwo, 515, 2, 34],
-    ["camera-01", bidderThree, 565, 3, 31],
-    ["camera-01", bidderOne, 590, 4, 29],
-    ["watch-01", bidderTwo, 350, 1, 45],
-    ["watch-01", bidderOne, 370, 2, 32],
-    ["watch-01", bidderTwo, 390, 3, 27],
-    ["vase-01", bidderOne, 105, 1, 24],
-    ["vase-01", bidderTwo, 125, 2, 20],
-    ["chair-01", bidderOne, 740, 1, 41],
-    ["chair-01", bidderTwo, 770, 2, 36],
-    ["chair-01", bidderOne, 810, 3, 30],
-  ] as Array<[string, { id: string; name: string }, number, number, number]>;
-
-  for (const [auctionId, bidder, amount, sequence, processingMs] of bidSeeds) {
-    const timestamp = Date.now() - (sequence + auctionId.length) * 60 * 60 * 1000;
-    bids.push({
-      id: createId(),
-      auctionId,
-      bidderId: bidder.id,
-      bidderName: bidder.name,
-      amount,
-      status: "ACCEPTED",
-      placedAt: new Date(timestamp).toISOString(),
-      sequence,
-      processingMs,
-      rejectionReason: null,
-      timing: {
-        requestReceivedAt: timestamp,
-        validationStartedAt: timestamp + 1,
-        validationCompletedAt: timestamp + 2,
-        operationStart: timestamp + 2,
-        operationEnd: timestamp + 2 + processingMs,
-        responseSentAt: timestamp + processingMs + 3,
-      },
-    });
-    userActivity.push({ userId: bidder.id, timestamp });
-  }
-
-  transactions.push({
-    id: createId(),
-    auctionId: "chair-01",
-    auctionTitle: "Mid-Century Teak Lounge Chair",
-    buyerId: bidderOne.id,
-    buyerName: bidderOne.name,
-    sellerId: "sample-seller",
-    sellerName,
-    finalPrice: 810,
-    status: "PENDING",
-    paymentStatus: "NOT_STARTED",
-    createdAt: daysAgo(8),
-  });
-
-  addActivity("Auction completed", "Mid-Century Teak Lounge Chair closed at $810", "auction");
-  addActivity("New listing", "1968 Rangefinder Film Camera is live", "auction");
-}
-

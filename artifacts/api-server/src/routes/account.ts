@@ -63,9 +63,7 @@ router.get("/dashboard/summary", authenticate, (_request, response): void => {
       auction.winnerId !== user.id &&
       acceptedBids.some((bid) => bid.auctionId === auction.id && bid.bidderId === user.id),
   ).length;
-  const sellerAuctions = auctions.filter((auction) => auction.sellerId === user.id);
   const totalAcceptedBids = acceptedBids.length;
-
   response.json(
     GetDashboardSummaryResponse.parse({
       success: true,
@@ -82,9 +80,9 @@ router.get("/dashboard/summary", authenticate, (_request, response): void => {
         watchlistCount: watchedCount,
         activeBidCount: currentUserBids.filter((bid) => {
           const auction = auctions.find((item) => item.id === bid.auctionId);
-          if (!auction) return false;
+          if (!auction || auction.exitedBidderIds?.includes(user.id)) return false;
           const status = refreshAuctionStatus(auction);
-          return status === "LIVE" || status === "ENDING_SOON";
+          return status === "UPCOMING" || status === "LIVE" || status === "ENDING_SOON";
         }).length,
         wonCount,
         lostCount,
@@ -242,6 +240,7 @@ router.get("/transactions", authenticate, (_request, response): void => {
     sendError(response, 401, "AUTH_REQUIRED", "Sign in to view transactions.");
     return;
   }
+  auctions.forEach(refreshAuctionStatus);
   const visibleTransactions = transactions
     .filter(
       (transaction) =>

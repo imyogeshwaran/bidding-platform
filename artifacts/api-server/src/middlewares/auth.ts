@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import type { UserRole } from "../repositories/memory-store";
-import { users } from "../repositories/memory-store";
+import { normalizeUserRole, users } from "../repositories/memory-store";
 
 export interface AuthUser {
   id: string;
@@ -37,14 +37,22 @@ export function authenticate(
     const payload = jwt.verify(match[1], readSessionSecret()) as JwtPayload;
     const subject = typeof payload.sub === "string" ? payload.sub : "";
     const user = users.find((candidate) => candidate.id === subject);
-    if (!user) {
+    const role = user ? normalizeUserRole(user.role) : null;
+    if (!user || !role) {
       response.status(401).json({
         success: false,
         error: { code: "SESSION_EXPIRED", message: "Your session has expired." },
       });
       return;
     }
-    response.locals.authUser = { id: user.id, role: user.role } satisfies AuthUser;
+    if (user.isSuspended) {
+      response.status(403).json({
+        success: false,
+        error: { code: "ACCOUNT_SUSPENDED", message: "This account is suspended. Contact support for assistance." },
+      });
+      return;
+    }
+    response.locals.authUser = { id: user.id, role } satisfies AuthUser;
     next();
   } catch {
     response.status(401).json({

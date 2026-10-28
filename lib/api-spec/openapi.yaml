@@ -31,6 +31,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+        "503":
+          description: API is running but MongoDB is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
 
   /auth/register:
     post:
@@ -140,7 +146,7 @@ paths:
     post:
       operationId: createAuction
       tags: [auctions]
-      summary: Create an auction as a seller
+      summary: Create an auction as a buyer or seller account
       security:
         - bearerAuth: []
       requestBody:
@@ -161,7 +167,7 @@ paths:
         "401":
           description: Authentication required
         "403":
-          description: Seller role required
+          description: Buyer or seller account required
   /auctions/{id}:
     parameters:
       - name: id
@@ -209,16 +215,50 @@ paths:
     delete:
       operationId: deleteAuction
       tags: [auctions]
-      summary: Cancel an auction owned by the signed-in seller
+      summary: Cancel an auction owned by the signed-in seller or moderate it as an administrator
       security:
         - bearerAuth: []
       responses:
-        "204":
+        "200":
           description: Auction cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuctionResult"
         "401":
           description: Authentication required
         "403":
-          description: Ownership required
+          description: Seller ownership or administrator access required
+        "409":
+          description: Auction cannot be cancelled in its current state
+        "404":
+          description: Auction not found
+  /auctions/{auctionId}/exit:
+    parameters:
+      - name: auctionId
+        in: path
+        required: true
+        schema: { type: string }
+    post:
+      operationId: exitAuction
+      tags: [bids]
+      summary: Exit an auction as a non-leading bidder
+      description: Exiting is final until the user places another accepted bid. The auction closes with the last remaining bidder when at least two distinct bidders have participated.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Auction exit recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuctionResult"
+        "401":
+          description: Authentication required
+        "403":
+          description: Buyer has not participated in the auction
+        "409":
+          description: Auction is closed, user has already exited, or user is leading
         "404":
           description: Auction not found
   /auctions/{auctionId}/bids:
@@ -243,7 +283,7 @@ paths:
     post:
       operationId: placeBid
       tags: [bids]
-      summary: Place a bid on an active auction
+      summary: Place a bid on an auction before its scheduled close
       security:
         - bearerAuth: []
       requestBody:
@@ -481,6 +521,86 @@ paths:
                 $ref: "#/components/schemas/FairnessResult"
         "403":
           description: Admin role required
+  /admin/metrics/overview:
+    get:
+      operationId: getAdminSoftwareMetricsOverview
+      tags: [metrics]
+      summary: Get an overview of persisted software and auction metrics
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/MetricsRange"
+      responses:
+        "200":
+          description: Summary counts and update timestamp
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSoftwareMetricsOverviewResult"
+        "400":
+          description: Invalid metrics range
+        "403":
+          description: Admin role required
+  /admin/metrics/standard:
+    get:
+      operationId: getAdminStandardSoftwareMetrics
+      tags: [metrics]
+      summary: Get the ten standard software metrics
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/MetricsRange"
+      responses:
+        "200":
+          description: Standard metrics with formulas and calculation status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSoftwareMetricListResult"
+        "400":
+          description: Invalid metrics range
+        "403":
+          description: Admin role required
+  /admin/metrics/custom:
+    get:
+      operationId: getAdminCustomSoftwareMetrics
+      tags: [metrics]
+      summary: Get project-specific BES and AFS metrics
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/MetricsRange"
+      responses:
+        "200":
+          description: Custom scores and normalized factors
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSoftwareMetricListResult"
+        "400":
+          description: Invalid metrics range
+        "403":
+          description: Admin role required
+  /admin/metrics/trends:
+    get:
+      operationId: getAdminSoftwareMetricsTrends
+      tags: [metrics]
+      summary: Get persisted bid volume and API response-time trend buckets
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/MetricsRange"
+      responses:
+        "200":
+          description: Time-bucketed operational trends
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSoftwareMetricsTrendsResult"
+        "400":
+          description: Invalid metrics range
+        "403":
+          description: Admin role required
   /users:
     get:
       operationId: getUsers
@@ -497,6 +617,31 @@ paths:
                 $ref: "#/components/schemas/UserListResult"
         "403":
           description: Admin role required
+  /users/suspension:
+    patch:
+      operationId: setUserSuspension
+      tags: [users]
+      summary: Suspend or restore a non-administrator account
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema: { type: string }
+        - name: suspended
+          in: query
+          required: true
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Account suspension updated
+        "400":
+          description: Invalid suspension state
+        "403":
+          description: Administrator role required or account is protected
+        "404":
+          description: User not found
 
 components:
   securitySchemes:
@@ -504,7 +649,79 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+  parameters:
+    MetricsRange:
+      name: range
+      in: query
+      required: false
+      description: Inclusive start and current-time end of the metric calculation window.
+      schema:
+        type: string
+        enum: [1h, 24h, 7d, 30d, all]
+        default: 24h
   schemas:
+    AdminSoftwareMetric:
+      type: object
+      required: [id, name, description, formula, value, unit, period, updatedAt, status]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string }
+        formula: { type: string }
+        value: { type: [number, "null"] }
+        unit: { type: string }
+        period: { type: string }
+        updatedAt: { type: string, format: date-time }
+        status: { type: string, enum: [AVAILABLE, INSUFFICIENT_DATA] }
+        supportingStats: { type: object, additionalProperties: true }
+        components: { type: array, items: { type: object, additionalProperties: true } }
+    AdminSoftwareMetricListResult:
+      type: object
+      required: [success, data, message]
+      properties:
+        success: { type: boolean }
+        data:
+          type: object
+          required: [metrics, range, period, updatedAt]
+          properties:
+            metrics: { type: array, items: { $ref: "#/components/schemas/AdminSoftwareMetric" } }
+            range: { type: string }
+            period: { type: string }
+            updatedAt: { type: string, format: date-time }
+        message: { type: string }
+    AdminSoftwareMetricsOverviewResult:
+      type: object
+      required: [success, data, message]
+      properties:
+        success: { type: boolean }
+        data:
+          type: object
+          required: [registeredUsers, auctions, bidAttempts, acceptedBids, rejectedBids, completedAuctions, range, period, updatedAt]
+          properties:
+            registeredUsers: { type: integer }
+            auctions: { type: integer }
+            bidAttempts: { type: integer }
+            acceptedBids: { type: integer }
+            rejectedBids: { type: integer }
+            completedAuctions: { type: integer }
+            range: { type: string }
+            period: { type: string }
+            updatedAt: { type: string, format: date-time }
+        message: { type: string }
+    AdminSoftwareMetricsTrendsResult:
+      type: object
+      required: [success, data, message]
+      properties:
+        success: { type: boolean }
+        data:
+          type: object
+          required: [trends, range, period, updatedAt]
+          properties:
+            trends: { type: array, items: { type: object, additionalProperties: true } }
+            range: { type: string }
+            period: { type: string }
+            updatedAt: { type: string, format: date-time }
+        message: { type: string }
     HealthStatus:
       type: object
       properties:
@@ -519,7 +736,8 @@ components:
         role: { type: string, enum: [BUYER, SELLER, ADMIN] }
         createdAt: { type: string, format: date-time }
         lastActiveAt: { type: ["string", "null"], format: date-time }
-      required: [id, name, email, role, createdAt]
+        isSuspended: { type: boolean }
+      required: [id, name, email, role, isSuspended, createdAt]
     RegistrationInput:
       type: object
       properties:
@@ -577,6 +795,10 @@ components:
         increment: { type: number }
         bidCount: { type: integer }
         uniqueBidders: { type: integer }
+        exitedBidderIds:
+          type: array
+          items: { type: string }
+          description: Bidder IDs that have exited and have not yet rejoined by placing another accepted bid
         startAt: { type: string, format: date-time }
         endAt: { type: string, format: date-time }
         status:
@@ -607,7 +829,7 @@ components:
         title: { type: string, minLength: 3, maxLength: 100 }
         description: { type: string, minLength: 20, maxLength: 3000 }
         category: { type: string, minLength: 2, maxLength: 60 }
-        imageUrl: { type: string, minLength: 1, maxLength: 1000 }
+        imageUrl: { type: string, minLength: 1, maxLength: 5000000, description: "HTTP(S) image URL or a base64 PNG, JPEG, WebP, or GIF data URL (maximum decoded upload size 3.5 MB)" }
         startingPrice: { type: number, exclusiveMinimum: 0 }
         increment: { type: number, exclusiveMinimum: 0 }
         startAt: { type: string, format: date-time }
@@ -619,7 +841,7 @@ components:
         title: { type: string, minLength: 3, maxLength: 100 }
         description: { type: string, minLength: 20, maxLength: 3000 }
         category: { type: string, minLength: 2, maxLength: 60 }
-        imageUrl: { type: string, minLength: 1, maxLength: 1000 }
+        imageUrl: { type: string, minLength: 1, maxLength: 5000000, description: "HTTP(S) image URL or a base64 PNG, JPEG, WebP, or GIF data URL (maximum decoded upload size 3.5 MB)" }
         startingPrice: { type: number, exclusiveMinimum: 0 }
         increment: { type: number, exclusiveMinimum: 0 }
         startAt: { type: string, format: date-time }

@@ -26,6 +26,7 @@ export interface User {
   createdAt: string;
   /** @nullable */
   lastActiveAt?: string | null;
+  isSuspended: boolean;
 }
 
 export type RegistrationInputRole = typeof RegistrationInputRole[keyof typeof RegistrationInputRole];
@@ -107,6 +108,8 @@ export interface Auction {
   increment: number;
   bidCount: number;
   uniqueBidders: number;
+  /** Bidder IDs that have exited and have not yet rejoined by placing another accepted bid */
+  exitedBidderIds?: string[];
   startAt: string;
   endAt: string;
   status: AuctionStatus;
@@ -132,8 +135,9 @@ export interface AuctionInput {
      */
   category: string;
   /**
+     * HTTP(S) image URL or a base64 PNG, JPEG, WebP, or GIF data URL (maximum decoded upload size 3.5 MB)
      * @minLength 1
-     * @maxLength 1000
+     * @maxLength 5000000
      */
   imageUrl: string;
   /** @exclusiveMinimum 0 */
@@ -161,8 +165,9 @@ export interface AuctionUpdate {
      */
   category?: string;
   /**
+     * HTTP(S) image URL or a base64 PNG, JPEG, WebP, or GIF data URL (maximum decoded upload size 3.5 MB)
      * @minLength 1
-     * @maxLength 1000
+     * @maxLength 5000000
      */
   imageUrl?: string;
   /** @exclusiveMinimum 0 */
@@ -494,4 +499,9 @@ export const GetAuctionsSort = {
   highestPrice: 'highestPrice',
   lowestPrice: 'lowestPrice',
 } as const;
+
+export type SetUserSuspensionParams = {
+id: string;
+suspended: boolean;
+};
 

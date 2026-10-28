@@ -1,0 +1,244 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run Auction Platform (Vite)",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"set PORT=5173&&set BASE_PATH=/&&pnpm --filter @workspace/auction-platform dev"
+			],
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Verify and Run Atlas Diagnostic",
+			"type": "shell",
+			"command": "Push-Location 'D:\\download1\\bidding-platform-main\\artifacts\\api-server'; Test-Path .\\atlas-diagnostic.mjs; if ($?) { node --env-file=..\\..\\.env .\\atlas-diagnostic.mjs }; Pop-Location",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect pnpm workspace files",
+			"type": "shell",
+			"command": "Get-ChildItem -Force -Name *pnpm*; Select-String -Path .\\pnpm-workspace.yaml -Pattern 'win32-x64|esbuild>|overrides:' -Context 2,4",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Reinstall Workspace Dependencies",
+			"type": "shell",
+			"command": "corepack pnpm install --force --config.ignore-scripts=true",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify Windows esbuild and Build API",
+			"type": "shell",
+			"command": "$dirs=Get-ChildItem .\\node_modules\\.pnpm -Directory -Filter '@esbuild+win32-x64*' -ErrorAction SilentlyContinue; Write-Output ('Windows esbuild package present: '+[bool]$dirs); $dirs | Select-Object -First 3 -ExpandProperty FullName; if (-not $dirs) { exit 1 }; Push-Location .\\artifacts\\api-server; npm run build; $code=$LASTEXITCODE; Pop-Location; exit $code",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify Health and MongoDB Connection",
+			"type": "shell",
+			"command": "foreach($url in @('http://localhost:3001/api/healthz','http://localhost:5173/api/healthz')){try{$r=Invoke-WebRequest -UseBasicParsing -TimeoutSec 5 $url; Write-Output ($url+' => '+$r.StatusCode+' '+$r.Content)}catch{Write-Output ($url+' => '+$_.Exception.Message)}}",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Build bidding platform API",
+			"type": "shell",
+			"command": "corepack",
+			"args": [
+				"pnpm",
+				"--filter",
+				"@workspace/api-server",
+				"build"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start bidding platform API",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"set PORT=3001&& corepack pnpm --filter @workspace/api-server start"
+			],
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Run API server on port 3001",
+			"type": "shell",
+			"command": "$env:PORT='3001'; $env:NODE_ENV='development'; corepack pnpm --filter @workspace/api-server start",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Run API server with workspace config",
+			"type": "shell",
+			"command": "$env:PORT='3001'; $env:NODE_ENV='development'; node --enable-source-maps .\\artifacts\\api-server\\dist\\index.mjs",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Run auction frontend on port 5173",
+			"type": "shell",
+			"command": "$env:PORT='5173'; $env:BASE_PATH='/'; corepack pnpm --filter @workspace/auction-platform dev",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Check Git repository status",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"status",
+				"--short",
+				"--branch"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check GitHub remote access",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"ls-remote",
+				"https://github.com/imyogeshwaran/bidding-platform.git",
+				"refs/heads/main"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Initialize local Git repository",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"init",
+				"--initial-branch=main"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Fetch GitHub project history",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"fetch",
+				"https://github.com/imyogeshwaran/bidding-platform.git",
+				"main"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Link local project to GitHub history",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"remote",
+				"add",
+				"origin",
+				"https://github.com/imyogeshwaran/bidding-platform.git"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Fetch remote branch",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"fetch",
+				"origin",
+				"main"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Compare workspace with GitHub main",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"reset",
+				"--mixed",
+				"origin/main"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Review files for GitHub push",
+			"type": "shell",
+			"command": "git status --short --branch --untracked-files=all; git diff --stat; git check-ignore -v .env; git ls-files --error-unmatch .env",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify push exclusions",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"check-ignore",
+				"-v",
+				".env"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Summarize project changes",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"diff",
+				"--stat"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check excluded and generated files",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"status",
+				"--short",
+				"--",
+				".env",
+				".env.*",
+				".vscode/tasks.json",
+				"artifacts/api-server/atlas-diagnostic.mjs",
+				"artifacts/api-server/atlas-ping.tmp.mjs"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run API tests before push",
+			"type": "shell",
+			"command": "corepack pnpm",
+			"args": [
+				"--filter",
+				"@workspace/api-server",
+				"test"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}

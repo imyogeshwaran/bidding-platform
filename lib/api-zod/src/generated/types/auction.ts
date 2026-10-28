@@ -20,6 +20,8 @@ export interface Auction {
   increment: number;
   bidCount: number;
   uniqueBidders: number;
+  /** Bidder IDs that have exited and have not yet rejoined by placing another accepted bid */
+  exitedBidderIds?: string[];
   startAt: Date;
   endAt: Date;
   status: AuctionStatus;

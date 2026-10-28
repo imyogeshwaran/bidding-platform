@@ -23,8 +23,9 @@ export interface AuctionUpdate {
      */
   category?: string;
   /**
+     * HTTP(S) image URL or a base64 PNG, JPEG, WebP, or GIF data URL (maximum decoded upload size 3.5 MB)
      * @minLength 1
-     * @maxLength 1000
+     * @maxLength 5000000
      */
   imageUrl?: string;
   /** @exclusiveMinimum 0 */

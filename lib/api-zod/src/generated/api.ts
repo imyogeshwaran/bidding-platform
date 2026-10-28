@@ -44,7 +44,8 @@ export const RegisterResponse = zod.object({
   "email": zod.string().email(),
   "role": zod.enum(['BUYER', 'SELLER', 'ADMIN']),
   "createdAt": zod.coerce.date(),
-  "lastActiveAt": zod.coerce.date().nullish()
+  "lastActiveAt": zod.coerce.date().nullish(),
+  "isSuspended": zod.boolean()
 })
 }),
   "message": zod.string()
@@ -74,7 +75,8 @@ export const LoginResponse = zod.object({
   "email": zod.string().email(),
   "role": zod.enum(['BUYER', 'SELLER', 'ADMIN']),
   "createdAt": zod.coerce.date(),
-  "lastActiveAt": zod.coerce.date().nullish()
+  "lastActiveAt": zod.coerce.date().nullish(),
+  "isSuspended": zod.boolean()
 })
 }),
   "message": zod.string()
@@ -92,7 +94,8 @@ export const GetCurrentUserResponse = zod.object({
   "email": zod.string().email(),
   "role": zod.enum(['BUYER', 'SELLER', 'ADMIN']),
   "createdAt": zod.coerce.date(),
-  "lastActiveAt": zod.coerce.date().nullish()
+  "lastActiveAt": zod.coerce.date().nullish(),
+  "isSuspended": zod.boolean()
 }),
   "message": zod.string()
 })
@@ -139,6 +142,7 @@ export const GetAuctionsResponse = zod.object({
   "increment": zod.number(),
   "bidCount": zod.number().int(),
   "uniqueBidders": zod.number().int(),
+  "exitedBidderIds": zod.array(zod.string()).optional().describe('Bidder IDs that have exited and have not yet rejoined by placing another accepted bid'),
   "startAt": zod.coerce.date(),
   "endAt": zod.coerce.date(),
   "status": zod.enum(['UPCOMING', 'LIVE', 'ENDING_SOON', 'COMPLETED', 'CANCELLED']),
@@ -164,7 +168,7 @@ export const createAuctionBodyDescriptionMax = 3000;
 export const createAuctionBodyCategoryMin = 2;
 export const createAuctionBodyCategoryMax = 60;
 
-export const createAuctionBodyImageUrlMax = 1000;
+export const createAuctionBodyImageUrlMax = 5000000;
 
 export const createAuctionBodyStartingPriceExclusiveMin = 0;
 
@@ -176,7 +180,7 @@ export const CreateAuctionBody = zod.object({
   "title": zod.string().min(createAuctionBodyTitleMin).max(createAuctionBodyTitleMax),
   "description": zod.string().min(createAuctionBodyDescriptionMin).max(createAuctionBodyDescriptionMax),
   "category": zod.string().min(createAuctionBodyCategoryMin).max(createAuctionBodyCategoryMax),
-  "imageUrl": zod.string().min(1).max(createAuctionBodyImageUrlMax),
+  "imageUrl": zod.string().min(1).max(createAuctionBodyImageUrlMax).describe('HTTP(S) image URL or a base64 PNG, JPEG, WebP, or GIF data URL (maximum decoded upload size 3.5 MB)'),
   "startingPrice": zod.number().gt(createAuctionBodyStartingPriceExclusiveMin),
   "increment": zod.number().gt(createAuctionBodyIncrementExclusiveMin),
   "startAt": zod.coerce.date(),
@@ -198,6 +202,7 @@ export const CreateAuctionResponse = zod.object({
   "increment": zod.number(),
   "bidCount": zod.number().int(),
   "uniqueBidders": zod.number().int(),
+  "exitedBidderIds": zod.array(zod.string()).optional().describe('Bidder IDs that have exited and have not yet rejoined by placing another accepted bid'),
   "startAt": zod.coerce.date(),
   "endAt": zod.coerce.date(),
   "status": zod.enum(['UPCOMING', 'LIVE', 'ENDING_SOON', 'COMPLETED', 'CANCELLED']),
@@ -230,6 +235,7 @@ export const GetAuctionResponse = zod.object({
   "increment": zod.number(),
   "bidCount": zod.number().int(),
   "uniqueBidders": zod.number().int(),
+  "exitedBidderIds": zod.array(zod.string()).optional().describe('Bidder IDs that have exited and have not yet rejoined by placing another accepted bid'),
   "startAt": zod.coerce.date(),
   "endAt": zod.coerce.date(),
   "status": zod.enum(['UPCOMING', 'LIVE', 'ENDING_SOON', 'COMPLETED', 'CANCELLED']),
@@ -256,7 +262,7 @@ export const updateAuctionBodyDescriptionMax = 3000;
 export const updateAuctionBodyCategoryMin = 2;
 export const updateAuctionBodyCategoryMax = 60;
 
-export const updateAuctionBodyImageUrlMax = 1000;
+export const updateAuctionBodyImageUrlMax = 5000000;
 
 export const updateAuctionBodyStartingPriceExclusiveMin = 0;
 
@@ -268,7 +274,7 @@ export const UpdateAuctionBody = zod.object({
   "title": zod.string().min(updateAuctionBodyTitleMin).max(updateAuctionBodyTitleMax).optional(),
   "description": zod.string().min(updateAuctionBodyDescriptionMin).max(updateAuctionBodyDescriptionMax).optional(),
   "category": zod.string().min(updateAuctionBodyCategoryMin).max(updateAuctionBodyCategoryMax).optional(),
-  "imageUrl": zod.string().min(1).max(updateAuctionBodyImageUrlMax).optional(),
+  "imageUrl": zod.string().min(1).max(updateAuctionBodyImageUrlMax).optional().describe('HTTP(S) image URL or a base64 PNG, JPEG, WebP, or GIF data URL (maximum decoded upload size 3.5 MB)'),
   "startingPrice": zod.number().gt(updateAuctionBodyStartingPriceExclusiveMin).optional(),
   "increment": zod.number().gt(updateAuctionBodyIncrementExclusiveMin).optional(),
   "startAt": zod.coerce.date().optional(),
@@ -290,6 +296,7 @@ export const UpdateAuctionResponse = zod.object({
   "increment": zod.number(),
   "bidCount": zod.number().int(),
   "uniqueBidders": zod.number().int(),
+  "exitedBidderIds": zod.array(zod.string()).optional().describe('Bidder IDs that have exited and have not yet rejoined by placing another accepted bid'),
   "startAt": zod.coerce.date(),
   "endAt": zod.coerce.date(),
   "status": zod.enum(['UPCOMING', 'LIVE', 'ENDING_SOON', 'COMPLETED', 'CANCELLED']),
@@ -301,13 +308,70 @@ export const UpdateAuctionResponse = zod.object({
 
 
 /**
- * @summary Cancel an auction owned by the signed-in seller
+ * @summary Cancel an auction owned by the signed-in seller or moderate it as an administrator
  */
 export const DeleteAuctionParams = zod.object({
   "id": zod.coerce.string()
 })
 
-export const DeleteAuctionResponse = zod.void()
+export const DeleteAuctionResponse = zod.object({
+  "success": zod.boolean(),
+  "data": zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "category": zod.string(),
+  "imageUrl": zod.string(),
+  "sellerId": zod.string(),
+  "sellerName": zod.string(),
+  "startingPrice": zod.number(),
+  "currentPrice": zod.number(),
+  "increment": zod.number(),
+  "bidCount": zod.number().int(),
+  "uniqueBidders": zod.number().int(),
+  "exitedBidderIds": zod.array(zod.string()).optional().describe('Bidder IDs that have exited and have not yet rejoined by placing another accepted bid'),
+  "startAt": zod.coerce.date(),
+  "endAt": zod.coerce.date(),
+  "status": zod.enum(['UPCOMING', 'LIVE', 'ENDING_SOON', 'COMPLETED', 'CANCELLED']),
+  "winnerId": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+}),
+  "message": zod.string()
+})
+
+
+/**
+ * Exiting is final until the user places another accepted bid. The auction closes with the last remaining bidder when at least two distinct bidders have participated.
+ * @summary Exit an auction as a non-leading bidder
+ */
+export const ExitAuctionParams = zod.object({
+  "auctionId": zod.coerce.string()
+})
+
+export const ExitAuctionResponse = zod.object({
+  "success": zod.boolean(),
+  "data": zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "category": zod.string(),
+  "imageUrl": zod.string(),
+  "sellerId": zod.string(),
+  "sellerName": zod.string(),
+  "startingPrice": zod.number(),
+  "currentPrice": zod.number(),
+  "increment": zod.number(),
+  "bidCount": zod.number().int(),
+  "uniqueBidders": zod.number().int(),
+  "exitedBidderIds": zod.array(zod.string()).optional().describe('Bidder IDs that have exited and have not yet rejoined by placing another accepted bid'),
+  "startAt": zod.coerce.date(),
+  "endAt": zod.coerce.date(),
+  "status": zod.enum(['UPCOMING', 'LIVE', 'ENDING_SOON', 'COMPLETED', 'CANCELLED']),
+  "winnerId": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+}),
+  "message": zod.string()
+})
 
 
 /**
@@ -396,6 +460,7 @@ export const GetMyBidsResponse = zod.object({
   "increment": zod.number(),
   "bidCount": zod.number().int(),
   "uniqueBidders": zod.number().int(),
+  "exitedBidderIds": zod.array(zod.string()).optional().describe('Bidder IDs that have exited and have not yet rejoined by placing another accepted bid'),
   "startAt": zod.coerce.date(),
   "endAt": zod.coerce.date(),
   "status": zod.enum(['UPCOMING', 'LIVE', 'ENDING_SOON', 'COMPLETED', 'CANCELLED']),
@@ -426,6 +491,7 @@ export const GetWatchlistResponse = zod.object({
   "increment": zod.number(),
   "bidCount": zod.number().int(),
   "uniqueBidders": zod.number().int(),
+  "exitedBidderIds": zod.array(zod.string()).optional().describe('Bidder IDs that have exited and have not yet rejoined by placing another accepted bid'),
   "startAt": zod.coerce.date(),
   "endAt": zod.coerce.date(),
   "status": zod.enum(['UPCOMING', 'LIVE', 'ENDING_SOON', 'COMPLETED', 'CANCELLED']),
@@ -695,9 +761,21 @@ export const GetUsersResponse = zod.object({
   "email": zod.string().email(),
   "role": zod.enum(['BUYER', 'SELLER', 'ADMIN']),
   "createdAt": zod.coerce.date(),
-  "lastActiveAt": zod.coerce.date().nullish()
+  "lastActiveAt": zod.coerce.date().nullish(),
+  "isSuspended": zod.boolean()
 })),
   "message": zod.string()
 })
+
+
+/**
+ * @summary Suspend or restore a non-administrator account
+ */
+export const SetUserSuspensionQueryParams = zod.object({
+  "id": zod.coerce.string(),
+  "suspended": zod.coerce.boolean()
+})
+
+export const SetUserSuspensionResponse = zod.unknown()
 
 

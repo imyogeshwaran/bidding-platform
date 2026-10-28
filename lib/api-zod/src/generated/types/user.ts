@@ -15,4 +15,5 @@ export interface User {
   createdAt: Date;
   /** @nullable */
   lastActiveAt?: Date | null;
+  isSuspended: boolean;
 }

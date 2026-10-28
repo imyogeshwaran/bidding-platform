@@ -48,6 +48,7 @@ export * from './registrationInput';
 export * from './registrationInputRole';
 export * from './scoreComparison';
 export * from './scoreFactor';
+export * from './setUserSuspensionParams';
 export * from './timePoint';
 export * from './transaction';
 export * from './transactionListResult';
